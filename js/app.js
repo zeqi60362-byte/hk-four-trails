@@ -324,6 +324,7 @@
     });
     } catch (e) { console.warn("section labels skipped", e); }
     mapReady = true;
+    refreshMap();   // 底图样式可能在首次 update() 之后才加载完，这里补一次点位数据
 
     map.on("mousemove", "pts", e => {
       map.getCanvas().style.cursor = "pointer";
