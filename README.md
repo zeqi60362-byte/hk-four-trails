@@ -4,8 +4,7 @@ An interactive, static dashboard for **8,847 panorama samples** along the MacLeh
 Hong Kong and Lantau trails. It maps geometric sun exposure, canopy shade and terrain
 obstruction, and lets you inspect every sampled point.
 
-**Live site:** `https://<your-github-name>.github.io/<repo-name>/`
-(replace after the first deployment — see *Deploy* below)
+**Live site:** https://zeqi60362-byte.github.io/hk-four-trails/
 
 ---
 
