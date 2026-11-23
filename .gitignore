@@ -1,0 +1,13 @@
+# published site, not the source xlsx
+pano/
+*.xlsx
+*.xls
+*.zip
+*.log
+
+# python / os noise
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+Thumbs.db

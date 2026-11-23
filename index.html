@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Four Trails heat &amp; shade dashboard · Hong Kong</title>
+<link rel="stylesheet" href="vendor/maplibre-gl.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="title"><strong>Hiking suitability of Hong Kong’s four long-distance trails</strong> · heat &amp; shade · <span id="hdr-n"></span> points</div>
+  <div class="showing" id="showing"></div>
+</header>
+
+<main class="layout">
+  <section class="left">
+    <div id="map" class="map" aria-label="Map of sampled trail points"></div>
+    <div class="legend" id="legend"></div>
+    <div class="maptip" id="maptip" hidden></div>
+
+    <div class="profile">
+      <div class="profile-head">
+        <div class="ph-text"><strong>Elevation profile</strong> · line coloured by <span id="prof-colour-name">trail</span> · dashed = location jump · scroll to zoom, double-click to reset</div>
+        <div class="seg" id="prof-trails" role="group" aria-label="Profile trail"></div>
+      </div>
+      <div class="profile-body" id="profile"></div>
+    </div>
+  </section>
+
+  <aside class="right">
+    <div class="filters">
+      <div class="fgroup">
+        <div class="flabel">Time window</div>
+        <div class="seg wide" id="f-window" role="group" aria-label="Time window"></div>
+      </div>
+      <div class="fgroup row colour-row">
+        <label class="flabel" for="colour-by">Point colour</label>
+        <select id="colour-by"></select>
+        <button class="link" id="reset">Reset filters</button>
+      </div>
+      <div class="fgroup">
+        <div class="flabel">Trail</div>
+        <div class="chips" id="f-trail"></div>
+      </div>
+      <div class="fgroup">
+        <div class="flabel">Sun exposure <span class="muted" id="exp-window-note"></span></div>
+        <div class="chips" id="f-exp"></div>
+      </div>
+      <div class="fgroup">
+        <div class="flabel row"><span>GVI range</span><span class="muted" id="gvi-val"></span></div>
+        <div class="range2" id="gvi-range">
+          <input type="range" id="gvi-lo" min="0" max="1" step="0.01" aria-label="Minimum GVI">
+          <input type="range" id="gvi-hi" min="0" max="1" step="0.01" aria-label="Maximum GVI">
+          <div class="track"><div class="fill" id="gvi-fill"></div></div>
+        </div>
+      </div>
+      <div class="fgroup">
+        <div class="flabel">Image quality</div>
+        <div class="chips" id="f-q"></div>
+      </div>
+    </div>
+
+    <nav class="tabs" role="tablist">
+      <button role="tab" class="tab active" data-tab="overview">Overview</button>
+      <button role="tab" class="tab" data-tab="detail">Point detail</button>
+      <button role="tab" class="tab" data-tab="about">Data notes</button>
+    </nav>
+
+    <div class="tabpanes">
+      <section class="pane active" id="pane-overview">
+        <p class="note" id="ov-note"></p>
+        <h3>Points by trail</h3>
+        <div id="ch-donut"></div>
+        <h3>Mean solar exposure by time window <span class="muted">(0 = shaded, 1 = fully exposed)</span></h3>
+        <div id="ch-window"></div>
+        <h3>Green view index (GVI) distribution</h3>
+        <div id="ch-gvi"></div>
+        <h3>Tree canopy by viewing direction <span class="muted">(mean % of the filtered points — near-isotropic; open a point for its own sector profile)</span></h3>
+        <div id="ch-dir"></div>
+        <h3>What sets the horizon <span class="muted">(dominant obstruction per point)</span></h3>
+        <div id="ch-obs"></div>
+        <h3>Trail summary <span class="muted">(filtered points)</span></h3>
+        <div id="tb-summary"></div>
+      </section>
+
+      <section class="pane" id="pane-detail">
+        <div id="detail"></div>
+      </section>
+
+      <section class="pane" id="pane-about">
+        <div class="about">
+          <p><strong>Source.</strong> <span id="src-name"></span>, sheet “点位指标”. One row per panorama, sampled every ~30 m along each trail.</p>
+          <p><strong>Time windows.</strong> <code>e_08</code>–<code>e_14</code> are mean geometric exposure over each two-hour window (08–10, 10–12, 12–14, 14–16), independent of when a walker arrives. Their average is the static share.</p>
+          <p><strong>Canopy gaps.</strong> Visibility is not binary. Each 5° × 2° cell of the panorama is scored by its share of sky; a cell of crown counts as the point's own gap fraction (2–15 %), and any other obstruction counts as zero. Exposure is the sine of solar altitude times that transmittance, so a closed canopy gives a small positive value rather than 0. Below the terrain horizon it is still 0.</p>
+          <p><strong>Arrival exposure.</strong> <code>e_arr_*</code> is the instantaneous exposure when a walker departing at that hour reaches the point at 4 km/h. It is used in the Simulation tab only; the two families are not interchangeable.</p>
+          <p><strong>Units.</strong> Exposure runs 0–1, where 1 is direct sun at normal incidence. Multiply by 15 to get sun minutes per km at walking pace.</p>
+          <p><strong>Sun exposure classes</strong> used in the filter apply to the selected time window: shaded &lt; 0.05, low 0.05–0.30, moderate 0.30–0.55, high ≥ 0.55.</p>
+          <p><strong>Elevation</strong> comes from Copernicus DSM 30 m, which includes vegetation height and therefore reads high under forest.</p>
+          <p><strong>Image quality.</strong> “Low” marks the bottom 20% of ground-region sharpness. Low-quality points are still part of the analysis.</p>
+          <p><strong>Obstruction angles</strong> are the maximum over 360 azimuths for tree crowns, structures and terrain; the combined angle is the 60 % skyline (the elevation above which 60 % of that direction is sky) or the terrain angle if that is higher.</p>
+        </div>
+      </section>
+    </div>
+  </aside>
+</main>
+
+<script src="vendor/d3.min.js"></script>
+<script src="vendor/maplibre-gl.js"></script>
+<script src="data/points.js"></script>
+<script src="data/track.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
